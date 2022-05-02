@@ -2,11 +2,24 @@
 
 ## How to use
 
-1. `git clone https://github.com/Chasing66/traefik-practice.git`
-2. `cd traefik-practice`
-3. `docker network create traefik`
-4. `cd traefik`
-5. `docker-compose up -d`
+1. ```
+   docker network create traefik
+   ```
+
+2. ```
+   git clone https://github.com/Chasing66/traefik-practice.git
+   ```
+
+3. ```
+   cd traefik-practice/traefik
+   ```
+
+4. ```
+   docker-compose up -d
+   ```
+5. ```
+   start any container you like
+   ```
 
 ## Reference
 
