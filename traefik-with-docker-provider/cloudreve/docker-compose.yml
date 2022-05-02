@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  cloudreve-mysql:
+    image: mariadb:latest
+    container_name: cloudreve-mysql
+    command: 
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+      - "--max_allowed_packet=32505856"
+      - "--transaction-isolation=READ-COMMITTED"
+      - "--binlog-format=ROW"
+    restart: unless-stopped
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: cloudreve
+      MYSQL_DATABASE: cloudreve
+      MYSQL_USER: cloudreve
+      MYSQL_PASSWORD: cloudreve
+    networks:
+      - default
+    logging: 
+      options: 
+        max-size: 1m
+  
+  cloudreve-redis:
+    image: redis:alpine
+    container_name: cloudreve-redis
+    networks:
+      - default
+    restart: unless-stopped
+    logging: 
+      options: 
+        max-size: 1m
+
+  aria2-pro:
+    container_name: aria2-pro
+    image: p3terx/aria2-pro
+    environment:
+      - PUID=65534
+      - PGID=65534
+      - UMASK_SET=022
+      - RPC_SECRET=cloudreve
+      - RPC_PORT=6800
+      - LISTEN_PORT=6888
+      - DISK_CACHE=64M
+      - IPV6_MODE=false
+      - UPDATE_TRACKERS=true
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./data/aria2/config:/config
+      - ./data/aria2/downloads:/downloads
+    logging: 
+      options: 
+        max-size: 1m
+    restart: unless-stopped
+    networks:
+      - default
+  
+  cloudreve:
+    container_name: cloudreve
+    image: xavierniu/cloudreve:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.cloudreve.entrypoints=websecure"
+      - "traefik.http.routers.cloudreve.rule=Host(`onedrive.idmu.ml`)"
+    environment: 
+      - PUID=1000
+      - PGID=1000
+      - TZ="Asia/Shanghai"
+    volumes: 
+      - ./data/cloudreve/uploads:/cloudreve/uploads
+      - ./data/aria2/downloads:/downloads
+      - ./conf.ini:/cloudreve/conf.ini
+        #- /data/Cloudreve/cloudreve.db:/cloudreve/cloudreve.db
+      - ./data/cloudreve/avatar/:/cloudreve/avatar/
+      # - /data/Transmission/downloads/complete/:/Transmission # 其他的宿主机目录
+    networks: 
+      - default
+      - traefik
+    logging: 
+      options: 
+        max-size: 1m
+
+networks:
+  traefik:
+    external: true
+    name: traefik
